@@ -2,13 +2,13 @@
    세민전 방문 차량 예약 (행사 전용 신청 페이지)
    · 명수당 예약과 같은 DB — 행사 코드(EVENT)로 따로 받음
    · 날짜·시간대·정원·공개 여부는 DB(event_status)에서 받아 옴
-   · 예약 확인·취소, 실시간 예약확인증은 명수당 예약 사이트(PARKING_URL) 페이지를 그대로 씀
+   · 예약 확인·취소(이 페이지)와 실시간 예약확인증(pass.html)도 이 사이트 안에서 — 세민전 예약만 보여 줌
    ========================================================= */
 (function () {
   "use strict";
 
   var EVENT = "semin";                                                   // events.code
-  var PARKING = String(window.PARKING_URL || "https://minjipark85.github.io/Parking/").replace(/\/?$/, "/");
+  var PASS_KEY = "semin-pass-v1";                                        // 확인증용 { plate, phone } — 이 휴대폰에만 저장
 
   // ---------- 공통 ----------
   var $ = function (id) { return document.getElementById(id); };
@@ -31,11 +31,6 @@
   // 한국 시간 기준 오늘·지금 (휴대폰 시간대와 상관없이)
   var seoul = function () { var k = new Date(Date.now() + 9 * 3600 * 1000); return { date: k.getUTCFullYear() + "-" + pad(k.getUTCMonth() + 1) + "-" + pad(k.getUTCDate()), min: k.getUTCHours() * 60 + k.getUTCMinutes() }; };
 
-  // 명수당 사이트로 넘길 때 차량번호·연락처는 주소의 # 뒤에 붙임 (서버로 보내지 않고, 받는 페이지가 읽은 뒤 바로 지움)
-  var withCreds = function (page, hash, plate, phone) {
-    return PARKING + page + "#" + hash + (plate ? "&p=" + encodeURIComponent(norm(plate)) + "&t=" + digits(phone) : "");
-  };
-  $("tabMine").href = $("footMine").href = PARKING + "apply.html#mine";
 
   // ---------- DB ----------
   var cfg = window.APP_CONFIG || {};
@@ -46,6 +41,7 @@
     $("setupNotice").textContent = "지금은 예약 신청을 받을 수 없어요. 잠시 후 다시 열어 주세요.";
   }
 
+  var CANCEL_STARTED = "예약 시간이 시작된 후에는 취소할 수 없어요.";
   var ERR = {
     full: "방금 이 시간대가 마감됐어요. 다른 시간대를 골라 주세요.",
     duplicate: "이 차량은 이미 세민전 예약이 돼 있어요. 시간을 바꾸려면 [내 예약 확인]에서 취소한 뒤 다시 신청해 주세요.",
@@ -65,13 +61,26 @@
   function show(view) {
     $("applyView").hidden = view !== "apply";
     $("doneView").hidden = view !== "done";
+    $("mineView").hidden = view !== "mine";
+    $("tabApply").setAttribute("aria-pressed", String(view !== "mine"));
+    $("tabMine").setAttribute("aria-pressed", String(view === "mine"));
+    try { history.replaceState(null, "", location.pathname + location.search + (view === "mine" ? "#mine" : "")); } catch (e) {}
     window.scrollTo(0, 0);
   }
   $("tabApply").addEventListener("click", function () { show("apply"); load(); });
+  $("tabMine").addEventListener("click", function () { show("mine"); });
   $("againBtn").addEventListener("click", function () { show("apply"); load(); });
   var lastDone = {};
-  $("passBtn").addEventListener("click", function () { if (lastDone.plate) location.href = withCreds("pass.html", "pass", lastDone.plate, lastDone.phone); });
-  $("toMineBtn").addEventListener("click", function () { location.href = withCreds("apply.html", "mine", lastDone.plate, lastDone.phone); });
+  // 실시간 예약확인증 — 차량번호·연락처를 이 휴대폰에 저장하고 확인증 페이지로
+  function openPass(plate, phone) {
+    try { localStorage.setItem(PASS_KEY, JSON.stringify({ plate: norm(plate), phone: digits(phone) })); } catch (e) {}
+    location.href = "pass.html";
+  }
+  $("passBtn").addEventListener("click", function () { if (lastDone.plate) openPass(lastDone.plate, lastDone.phone); });
+  $("toMineBtn").addEventListener("click", function () {
+    $("mPlate").value = lastDone.plate || ""; $("mPhone").value = lastDone.phone ? fmtPhone(lastDone.phone) : "";
+    show("mine"); if (lastDone.plate) loadMine();
+  });
 
   // ---------- 행사 정보 · 시간대 (DB) ----------
   var ev = null, loaded = false, selSlot = "", reqNo = 0, openTimer = null;
@@ -218,9 +227,56 @@
       .then(function () { delete btn.dataset.busy; btn.disabled = false; btn.textContent = "예약 신청"; updateSummary(); });
   });
 
+  // ---------- 내 예약 확인·취소 (세민전 예약만) ----------
+  $("mPhone").addEventListener("input", function () { this.value = fmtPhone(this.value); });
+  function loadMine() {
+    var plate = norm($("mPlate").value), phone = digits($("mPhone").value);
+    $("mineError").textContent = "";
+    if (!sb) { $("mineError").textContent = "지금은 조회할 수 없어요."; return; }
+    if (!PLATE_RE.test(plate)) { $("mineError").textContent = ERR.bad_plate; return; }
+    if (!/^01\d{8,9}$/.test(phone)) { $("mineError").textContent = ERR.bad_phone; return; }
+    $("mineBtn").disabled = true;
+    sb.rpc("my_reservations", { p_plate: plate, p_phone: phone }).then(function (res) {
+      if (res.error) throw res.error;
+      var list = (res.data || []).filter(function (r) { return !!r.event; });       // 명수당 예약은 빼고 세민전(행사) 예약만
+      if (!list.length) { $("mineList").innerHTML = '<p class="muted">앞으로 예정된 세민전 예약이 없어요. 차량번호와 연락처가 신청할 때와 같은지 확인해 주세요.</p>'; return; }
+      $("mineList").innerHTML = list.map(function (r) {
+        // 예약한 시간대가 시작됐으면 취소 버튼 대신 안내
+        var startAt = new Date(String(r.reserve_date).slice(0, 10) + "T" + String(r.reserve_time).slice(0, 5) + ":00+09:00");
+        var started = Date.now() >= startAt.getTime();
+        var when = String(r.reserve_time).slice(0, 5) + " ~ " + String(r.reserve_end || "").slice(0, 5);
+        return '<div class="my-item' + (started ? " started" : "") + '" data-id="' + esc(r.id) + '"><span class="when">' + dateLabel(String(r.reserve_date)) + ' · ' + when + ' <span class="ev-tag">' + esc(r.event) + '</span></span>' +
+          '<span class="acts"><button type="button" class="to-pass">확인증</button>' + (started ? '<span class="no-cancel" title="' + CANCEL_STARTED + '">취소 불가</span>' : '<button type="button" class="cancel">취소</button>') + '</span>' +
+          (started ? '<span class="started-note">' + CANCEL_STARTED + '</span>' : '') +
+          '<span class="meta"><span class="mini-plate" style="font-size:15px">' + esc(r.plate) + '</span> · 예약번호 <span class="mono">' + esc(r.code) + '</span></span></div>';
+      }).join("");
+    }).catch(function (e) { console.error(e); $("mineError").textContent = "조회하지 못했어요. 잠시 후 다시 시도해 주세요."; })
+      .then(function () { $("mineBtn").disabled = false; });
+  }
+  $("mineForm").addEventListener("submit", function (e) { e.preventDefault(); loadMine(); });
+  $("mineList").addEventListener("click", function (e) {
+    if (e.target.closest(".to-pass")) { openPass($("mPlate").value, $("mPhone").value); return; }
+    var b = e.target.closest(".cancel"); if (!b) return;
+    if (!b.classList.contains("arm")) {          // 한 번 더 눌러야 취소 (실수 방지)
+      b.classList.add("arm"); b.textContent = "정말 취소";
+      setTimeout(function () { if (b.isConnected && b.classList.contains("arm")) { b.classList.remove("arm"); b.textContent = "취소"; } }, 4000);
+      return;
+    }
+    var item = b.closest(".my-item");
+    b.disabled = true; b.textContent = "취소 중…";
+    sb.rpc("cancel_reservation", { p_id: item.dataset.id, p_phone: digits($("mPhone").value) }).then(function (res) {
+      if (res.error) throw res.error;
+      var d = res.data || {};
+      if (d.error === "started") { b.replaceWith(Object.assign(document.createElement("span"), { className: "no-cancel", textContent: "취소 불가" })); item.classList.add("started"); $("mineError").textContent = CANCEL_STARTED; return; }
+      if (!d.ok) throw new Error("not cancelled");
+      item.classList.add("gone"); b.textContent = "취소됨";
+    }).catch(function (e) { console.error(e); b.disabled = false; b.classList.remove("arm"); b.textContent = "취소"; $("mineError").textContent = "취소하지 못했어요. 잠시 후 다시 시도해 주세요."; });
+  });
+
   // ---------- 시작 ----------
   updateSummary();
   load();
+  if (/^#mine/.test(location.hash)) show("mine");                        // 확인증 화면 등에서 #mine 으로 들어오면 바로 조회 화면
   // 남은 자리·공개 여부 30초마다 새로 (지난 시간대 표시도 함께)
   setInterval(function () { if (!$("applyView").hidden && !document.hidden) load(); }, 30000);
 })();
