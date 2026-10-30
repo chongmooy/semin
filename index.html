@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="ko" data-page="semin">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>세민전 방문 차량 예약 | 한국외국어대학교 글로벌캠퍼스</title>
+  <meta name="theme-color" content="#1d4fb0">
+  <meta name="description" content="세민전 방문 차량 예약 — 시간대를 고르고 차량번호를 입력하면 출입 예약이 바로 확정됩니다.">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+  <link rel="stylesheet" href="semin.css?v=1">
+  <script>
+    // 명수당 예약 사이트 주소 — DB 연결 정보(config.js)와 예약 확인 페이지를 여기서 가져와요
+    window.PARKING_URL = "https://minjipark85.github.io/Parking/";
+  </script>
+</head>
+<body>
+<div class="page">
+  <header class="top">
+    <a class="brand" href="./" title="처음 화면으로">
+      <span class="brand-mark" aria-hidden="true">P</span>
+      <span>세민전 방문 차량 예약</span>
+    </a>
+    <nav class="tabs" aria-label="메뉴">
+      <button type="button" id="tabApply" aria-pressed="true">예약 신청</button>
+      <a class="tab" id="tabMine" href="https://minjipark85.github.io/Parking/apply.html#mine">내 예약 확인</a>
+    </nav>
+  </header>
+
+  <div class="notice" id="setupNotice" hidden></div>
+
+  <!-- 예약 신청 -->
+  <main id="applyView">
+    <section class="step closed" id="closedNote" hidden>
+      <h2 id="closedTitle">지금은 세민전 예약을 받지 않아요</h2>
+      <p class="muted" id="closedText">예약이 열리면 이 페이지에서 신청할 수 있어요. 이미 한 예약은 [내 예약 확인]에서 볼 수 있어요.</p>
+    </section>
+    <form id="applyForm" novalidate>
+      <section class="step" aria-labelledby="s1">
+        <h2 id="s1"><span class="num">1</span>방문 날짜</h2>
+        <div class="dates" id="dateStrip" role="radiogroup" aria-label="방문 날짜"></div>
+        <p class="date-note" id="dateNote" role="status"></p>
+      </section>
+
+      <section class="step" aria-labelledby="s2">
+        <h2 id="s2"><span class="num">2</span>시간대</h2>
+        <div class="slots" id="slotList" role="radiogroup" aria-label="시간대">
+          <p class="muted">예약 현황을 불러오는 중…</p>
+        </div>
+      </section>
+
+      <section class="step" aria-labelledby="s3">
+        <h2 id="s3"><span class="num">3</span>차량과 신청자</h2>
+        <label class="field">차량번호
+          <div class="plate">
+            <span class="strip" aria-hidden="true">KOR</span>
+            <input id="fPlate" autocomplete="off" spellcheck="false" placeholder="12가 3456" required>
+          </div>
+          <span class="hint" id="plateHint">예: 12가3456, 123가4567, 서울12가3456</span>
+        </label>
+        <div class="two">
+          <label class="field">이름
+            <input id="fName" autocomplete="name" maxlength="30" placeholder="홍길동" required>
+          </label>
+          <label class="field">연락처
+            <input id="fPhone" type="tel" inputmode="numeric" autocomplete="tel" placeholder="010-1234-5678" maxlength="13" required>
+          </label>
+        </div>
+      </section>
+
+      <section class="step" aria-labelledby="s4">
+        <h2 id="s4"><span class="num">4</span>개인정보 수집·이용 동의</h2>
+        <label class="agree">
+          <input type="checkbox" id="fAgree">
+          <span>아래 내용에 동의합니다 (필수)</span>
+        </label>
+        <details class="terms">
+          <summary>내용 보기</summary>
+          <table>
+            <tr><th>수집 항목</th><td>이름, 연락처, 차량번호, 방문 날짜·시간대</td></tr>
+            <tr><th>이용 목적</th><td>세민전 방문 차량 출입 확인, 예약 관련 연락</td></tr>
+            <tr><th>보관 기간</th><td>이름·연락처는 방문일로부터 30일 후 삭제</td></tr>
+          </table>
+          <p>동의하지 않으실 수 있으며, 이 경우 예약 신청을 할 수 없습니다.</p>
+        </details>
+      </section>
+
+      <div class="submit-bar">
+        <p class="summary" id="summary">시간대를 골라 주세요.</p>
+        <p class="form-error" id="formError" role="alert"></p>
+        <button type="submit" class="primary" id="submitBtn">예약 신청</button>
+      </div>
+    </form>
+  </main>
+
+  <!-- 신청 완료 -->
+  <main id="doneView" hidden>
+    <section class="ticket" aria-labelledby="doneTitle">
+      <div class="ticket-head">
+        <span class="check" aria-hidden="true">✓</span>
+        <h2 id="doneTitle">예약이 확정됐어요</h2>
+      </div>
+      <dl class="ticket-body">
+        <div><dt>예약번호</dt><dd class="mono" id="dCode"></dd></div>
+        <div><dt>행사</dt><dd id="dEvent"></dd></div>
+        <div><dt>방문 날짜</dt><dd id="dDate"></dd></div>
+        <div><dt>시간대</dt><dd id="dSlot"></dd></div>
+        <div><dt>차량번호</dt><dd><span class="mini-plate" id="dPlate"></span></dd></div>
+      </dl>
+      <p class="ticket-foot">예약한 시간대에 오시면 번호판 확인 후 바로 들어오실 수 있어요. 번호판 인식이 어려울 때는 <b>실시간 예약확인증</b>을 보여 주세요.</p>
+    </section>
+    <button type="button" class="primary pass-go" id="passBtn">실시간 예약확인증 열기</button>
+    <div class="row-buttons">
+      <button type="button" class="primary" id="againBtn">다른 예약 신청</button>
+      <button type="button" id="toMineBtn">내 예약 확인·취소</button>
+    </div>
+  </main>
+
+  <footer class="foot">
+    <span id="footSlots"></span>
+    <span>예약 확인·취소와 실시간 예약확인증은 <a id="footMine" href="https://minjipark85.github.io/Parking/apply.html#mine">명수당 방문 차량 예약</a> 페이지에서 볼 수 있어요.</span>
+    <span>정기 등록 차량은 예약 없이 출입할 수 있어요.</span>
+  </footer>
+</div>
+
+<script src="https://minjipark85.github.io/Parking/supabase.js"></script>
+<script src="https://minjipark85.github.io/Parking/config.js"></script>
+<script src="https://minjipark85.github.io/Parking/stats.js?v=1"></script>
+<script src="semin.js?v=1"></script>
+</body>
+</html>
