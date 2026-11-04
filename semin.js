@@ -123,17 +123,10 @@
       $("closedTitle").textContent = st === "ended" ? "세민전 예약이 끝났어요" : "지금은 세민전 예약을 받지 않아요";
       $("closedText").textContent = st === "ended" ? "이용해 주셔서 감사합니다." : "예약이 열리면 이 페이지에서 신청할 수 있어요. 이미 한 예약은 [내 예약 확인]에서 볼 수 있어요.";
     }
-    // 1. 날짜 (행사 날 하나)
+    // 1. 방문 날짜 및 시간 (행사 날 하나 · 신청 받는 시간대만 보여 줌)
     if (ev) {
-      var v = String(ev.date).slice(0, 10), d = parseD(v), cls = d.getDay() === 0 ? " sun" : d.getDay() === 6 ? " sat" : "";
-      var t = seoul().date, full = !sched && ev.slots.length && ev.slots.every(function (x) { return x.state === "full" || x.state === "closed" || slotPast(x); }) && ev.slots.some(function (x) { return x.state === "full"; });
-      $("dateStrip").innerHTML = '<div class="date-col"><button type="button" class="date-chip' + cls + (sched ? " sched" : "") + (full ? " full" : "") + '" role="radio" data-date="' + v + '" aria-checked="true"' +
-        ' aria-label="' + esc(dateLabel(v) + " " + ev.title + (sched ? ", " + pre.day + " " + pre.time + " 오픈 예정" : full ? ", 예약 마감" : "")) + '">' +
-        '<span class="dw">' + (v === t ? "오늘" : DOW[d.getDay()]) + '</span><span class="dd">' + d.getDate() + '</span><span class="dl">' + (d.getMonth() + 1) + '월</span></button>' +
-        (sched ? '<span class="date-open" aria-hidden="true">' + pre.day + "<br>" + pre.time + " 오픈</span>"
-          : full ? '<span class="date-full" aria-hidden="true">마감</span>' : '<span class="date-ev" aria-hidden="true">' + esc(ev.title) + '</span>') + '</div>';
-      $("dateNote").textContent = sched ? pre.day + " " + pre.time + "에 열려요. 시간대는 그때부터 고를 수 있어요." : "";
-      $("footSlots").textContent = ev.title + " 예약 시간대: " + ev.slots.filter(function (x) { return x.state !== "closed"; }).map(function (x) { return x.start + "~" + x.end; }).join(" · ");
+      $("dateNote").textContent = sched ? pre.day + " " + pre.time + "에 열려요. 그때부터 신청할 수 있어요." : "";
+      $("footSlots").textContent = ev.title + " 방문 차량 예약: " + dateLabel(ev.date) + " " + ev.slots.filter(function (x) { return x.state !== "closed"; }).map(function (x) { return x.start + "~" + x.end; }).join(" · ");
     }
     renderSlots();
   }
@@ -143,7 +136,15 @@
     if (!sb) { $("slotList").innerHTML = '<p class="muted">지금은 예약 현황을 볼 수 없어요.</p>'; updateSummary(); return; }
     if (!ev) { $("slotList").innerHTML = loaded ? "" : '<p class="muted">예약 현황을 불러오는 중…</p>'; updateSummary(); return; }
     var sched = ev.state === "sched", plb = sched ? openLabel(ev.opens_at) : null, html = "";
-    ev.slots.forEach(function (x) {
+    var list = ev.slots.filter(function (x) { return x.state !== "closed"; });          // 정원 0 = 신청 안 받는 시간대는 숨김
+    var one = list.length === 1;                                                         // 시간대가 하나면 고를 필요 없음
+    $("slotList").classList.toggle("single", one || list.length === 0);
+    $("slotList").setAttribute("role", one ? "group" : "radiogroup");
+    if (one) {
+      var x1 = list[0], dis1 = sched || slotPast(x1) || x1.state === "full";
+      selSlot = dis1 ? "" : String(x1.id);
+    }
+    list.forEach(function (x) {
       var counts = x.capacity != null && x.booked != null;
       var past = slotPast(x), closed = x.state === "closed", soldOut = x.state === "full";
       var disabled = sched || past || closed || soldOut;
@@ -153,15 +154,21 @@
         : x.state === "few" ? "마감 임박" : "예약 가능";
       var pct = Math.max(0, Math.min(100, +x.fill || 0));
       var few = !disabled && x.state === "few", full = !sched && !past && soldOut;
+      if (one) {                                                                         // 안내 칸 (누를 필요 없음)
+        html += '<div class="slot fixed' + (disabled ? " off" : "") + (few ? " few" : "") + (sched ? " pre" : "") + (full ? " full" : "") + '" data-slot="' + esc(x.id) + '">' +
+          '<span class="time"><span class="vday">' + dateLabel(ev.date) + '</span>' + esc(x.start) + ' ~ ' + esc(x.end) + '</span><span class="left">' + label + '</span>' +
+          '<span class="bar" aria-hidden="true"><i style="width:' + pct + '%"></i></span></div>';
+        return;
+      }
       html += '<button type="button" class="slot' + (few ? " few" : "") + (sched ? " pre" : "") + (full ? " full" : "") + '" role="radio" data-slot="' + esc(x.id) + '" aria-checked="' + (String(selSlot) === String(x.id)) + '"' + (disabled ? " disabled" : "") + '>' +
-        '<span class="time">' + esc(x.start) + ' ~ ' + esc(x.end) + '</span><span class="left">' + label + '</span>' +
+        '<span class="time"><span class="vday">' + dateLabel(ev.date) + '</span>' + esc(x.start) + ' ~ ' + esc(x.end) + '</span><span class="left">' + label + '</span>' +
         '<span class="bar" aria-hidden="true"><i style="width:' + pct + '%"></i></span></button>';
     });
-    $("slotList").innerHTML = html || '<p class="muted">아직 시간대가 정해지지 않았어요.</p>';
+    $("slotList").innerHTML = html || '<p class="muted">아직 예약 시간이 정해지지 않았어요.</p>';
     updateSummary();
   }
   $("slotList").addEventListener("click", function (e) {
-    var b = e.target.closest(".slot"); if (!b || b.disabled) return;
+    var b = e.target.closest("button.slot"); if (!b || b.disabled) return;
     selSlot = b.dataset.slot;
     Array.prototype.forEach.call(document.querySelectorAll(".slot"), function (s) { s.setAttribute("aria-checked", String(s.dataset.slot === selSlot)); });
     setError(""); updateSummary();
@@ -187,7 +194,11 @@
     var day = "<b>" + esc(ev.title) + " · " + dateLabel(ev.date) + "</b>";
     if (sched) { s.innerHTML = day + " · " + pl.day + " " + pl.time + "부터 신청할 수 있어요."; return; }
     var x = slotById(selSlot);
-    if (!x) { s.innerHTML = day + " · 시간대를 골라 주세요."; return; }
+    if (!x) {
+      var only = ev.slots.filter(function (y) { return y.state !== "closed"; });
+      s.innerHTML = day + (only.length === 1 ? (only[0].state === "full" ? " · 예약이 마감됐어요." : " · 지금은 신청할 수 없어요.") : " · 시간대를 골라 주세요.");
+      return;
+    }
     var p = norm($("fPlate").value);
     s.innerHTML = "<b>" + esc(ev.title) + " · " + dateLabel(ev.date) + " " + esc(x.start) + " ~ " + esc(x.end) + "</b>" + (PLATE_RE.test(p) ? " · " + esc(pretty(p)) : "");
   }
@@ -199,7 +210,7 @@
     var plate = norm($("fPlate").value), name = $("fName").value.trim(), phone = digits($("fPhone").value);
     if (!sb || !ev) return setError("지금은 예약 신청을 받을 수 없어요.");
     if (ev.state !== "open") return setError(ERR.not_open);
-    if (!slotById(selSlot)) return setError(ERR.bad_slot);
+    if (!slotById(selSlot)) return setError(ev.slots.filter(function (y) { return y.state !== "closed"; }).length === 1 ? "지금은 신청할 수 없어요. (마감됐거나 신청 시간이 아니에요)" : ERR.bad_slot);
     if (!PLATE_RE.test(plate)) { $("fPlate").focus(); return setError(ERR.bad_plate); }
     if (!name) { $("fName").focus(); return setError(ERR.bad_name); }
     if (!/^01\d{8,9}$/.test(phone)) { $("fPhone").focus(); return setError(ERR.bad_phone); }
@@ -221,7 +232,7 @@
         $("dDate").textContent = dateLabel(String(r.date));
         $("dSlot").textContent = r.slot + " ~ " + r.end;
         $("dPlate").textContent = r.plate;
-        $("fPlate").value = ""; selSlot = ""; $("fAgree").checked = false;
+        $("fPlate").value = ""; selSlot = ""; $("fAgree").checked = false; load();
         show("done");
       })
       .catch(function (err) { console.error(err); setError("신청하지 못했어요. 인터넷 연결을 확인하고 다시 시도해 주세요."); })

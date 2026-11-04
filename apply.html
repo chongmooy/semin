@@ -10,7 +10,7 @@
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
-  <link rel="stylesheet" href="semin.css?v=3">
+  <link rel="stylesheet" href="semin.css?v=4">
 </head>
 <body>
 <div class="page">
@@ -35,20 +35,15 @@
     </section>
     <form id="applyForm" novalidate>
       <section class="step" aria-labelledby="s1">
-        <h2 id="s1"><span class="num">1</span>방문 날짜</h2>
-        <div class="dates" id="dateStrip" role="radiogroup" aria-label="방문 날짜"></div>
+        <h2 id="s1"><span class="num">1</span>방문 날짜 및 시간</h2>
+        <div class="slots single" id="slotList" aria-label="방문 날짜 및 시간">
+          <p class="muted">예약 현황을 불러오는 중…</p>
+        </div>
         <p class="date-note" id="dateNote" role="status"></p>
       </section>
 
-      <section class="step" aria-labelledby="s2">
-        <h2 id="s2"><span class="num">2</span>시간대</h2>
-        <div class="slots" id="slotList" role="radiogroup" aria-label="시간대">
-          <p class="muted">예약 현황을 불러오는 중…</p>
-        </div>
-      </section>
-
       <section class="step" aria-labelledby="s3">
-        <h2 id="s3"><span class="num">3</span>차량과 신청자</h2>
+        <h2 id="s3"><span class="num">2</span>차량과 신청자</h2>
         <label class="field">차량번호
           <div class="plate">
             <span class="strip" aria-hidden="true">KOR</span>
@@ -67,7 +62,7 @@
       </section>
 
       <section class="step" aria-labelledby="s4">
-        <h2 id="s4"><span class="num">4</span>개인정보 수집·이용 동의</h2>
+        <h2 id="s4"><span class="num">3</span>개인정보 수집·이용 동의</h2>
         <label class="agree">
           <input type="checkbox" id="fAgree">
           <span>아래 내용에 동의합니다 (필수)</span>
@@ -84,7 +79,7 @@
       </section>
 
       <div class="submit-bar">
-        <p class="summary" id="summary">시간대를 골라 주세요.</p>
+        <p class="summary" id="summary">예약 정보를 불러오는 중…</p>
         <p class="form-error" id="formError" role="alert"></p>
         <button type="submit" class="primary" id="submitBtn">예약 신청</button>
       </div>
@@ -138,6 +133,6 @@
 <script src="supabase.js"></script>
 <script src="config.js"></script>
 <script src="stats.js?v=2"></script>
-<script src="semin.js?v=3"></script>
+<script src="semin.js?v=4"></script>
 </body>
 </html>

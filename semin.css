@@ -194,3 +194,13 @@ button.primary { background: var(--accent); border-color: var(--accent); box-sha
 .date-ev { color: var(--chip); }
 .submit-bar { background: var(--bg); border-top-color: var(--gold); }
 .ticket-head { background: #e1eee4; }
+
+/* 방문 날짜 및 시간 — 시간대가 하나면 고르지 않고 안내 칸으로 (2026-11-04) */
+.slots.single { grid-template-columns: 1fr !important; }
+.slots.single .slot { grid-template-columns: 1fr auto !important; text-align: left !important; justify-items: stretch !important; }
+.slot.fixed { cursor: default; border: 2px solid var(--accent); background: var(--accent-soft); padding: 12px 14px; }
+.slot.fixed:disabled, .slot.fixed.off { border: 1px solid var(--line); background: var(--surface); }
+.slot .vday { display: block; margin-bottom: 2px; font-family: var(--body); font-size: 15px; font-weight: 700; color: var(--accent); }
+.slot.fixed .time { font-size: 22px; }
+.slots.single .slot > * { min-width: 0; }
+.slots.single .slot .left { white-space: normal; text-align: right; }
