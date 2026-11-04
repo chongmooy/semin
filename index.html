@@ -3,141 +3,103 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>세민전 방문 차량 예약 | 한국외국어대학교 글로벌캠퍼스</title>
-  <meta name="theme-color" content="#1d4fb0">
-  <meta name="description" content="세민전 방문 차량 예약 — 시간대를 고르고 차량번호를 입력하면 출입 예약이 바로 확정됩니다.">
+  <title>제36회 세계민속문화축전 | 한국외국어대학교 글로벌캠퍼스</title>
+  <meta name="description" content="2026년 11월 14일(토) 오후 4시, 한국외국어대학교 글로벌캠퍼스 학생회관 앞 특설무대. 입장 무료. 방문 차량은 사전 예약해 주세요.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="제36회 세계민속문화축전으로 여러분을 초대합니다!">
+  <meta property="og:description" content="2026.11.14.(토) 오후 4시 · 한국외대 글로벌캠퍼스 학생회관 앞 특설무대 · 입장 무료">
+  <meta name="theme-color" content="#0a3524">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
-  <link rel="stylesheet" href="semin.css?v=2">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&family=Noto+Serif+KR:wght@900&display=swap">
+  <style>
+    /* 카지노 컨셉 · 그린 펠트 테이블 */
+    :root { --felt: #0f4a32; --felt-2: #0a3524; --gold: #d6b25e; --gold-2: #f1d78f; --cream: #f6f1e4; --ink: #1d1a14; --muted: #6e6450; --red: #b3262b; }
+    * { box-sizing: border-box; }
+    html { background: var(--felt-2); }
+    body { margin: 0; min-height: 100vh; color: var(--cream); line-height: 1.7;
+           font-family: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+           background: radial-gradient(rgba(255, 255, 255, .06) 1px, transparent 1px) 0 0 / 3px 3px,
+                       radial-gradient(140% 60% at 50% 0%, #17603f 0%, var(--felt) 40%, var(--felt-2) 100%); }
+    .wrap { max-width: 640px; margin: 0 auto; padding: 22px 16px calc(40px + env(safe-area-inset-bottom)); }
+    .rail { text-align: center; letter-spacing: .35em; font-size: 12px; color: var(--gold-2); margin: 4px 0 16px; }
+    .red { color: var(--red); }
+    .rail .red { color: #e25b5f; }
+
+    /* 포스터 — 금색 액자 */
+    .poster { border-radius: 14px; padding: 8px; box-shadow: 0 18px 40px rgba(0, 0, 0, .45);
+              background: linear-gradient(145deg, #f3d98b, #9c7a2c 45%, #f1d78f 70%, #8a6a22); }
+    .poster img { display: block; width: 100%; height: auto; border-radius: 8px; background: var(--felt); }
+
+    /* 초대 문구 — 트럼프 카드 한 장 */
+    .card { position: relative; margin: 26px 0 0; background: var(--cream); color: var(--ink); border-radius: 18px;
+            padding: 52px 24px 44px; box-shadow: 0 14px 34px rgba(0, 0, 0, .4); }
+    .pip { position: absolute; font: 900 17px/1.05 "Noto Serif KR", serif; text-align: center; }
+    .pip.tl { top: 12px; left: 14px; }
+    .pip.br { bottom: 12px; right: 14px; transform: rotate(180deg); }
+    h1 { margin: 0 0 16px; font-size: 21px; line-height: 1.45; text-align: center; font-weight: 900; word-break: keep-all; }
+    h1 .s { font-size: 18px; }
+    .card p { margin: 0 0 12px; font-size: 15.5px; word-break: keep-all; }
+    .facts { list-style: none; margin: 18px 0 0; padding: 14px 0 0; border-top: 1px dashed #c9bfa6; display: grid; gap: 8px; }
+    .facts li { display: grid; grid-template-columns: 24px 58px minmax(0, 1fr); align-items: baseline; font-size: 15px; }
+    .facts .sym { font-size: 17px; }
+    .facts .k { color: var(--muted); font-weight: 700; }
+    .facts .v { word-break: keep-all; }
+
+    /* 방문 차량 예약 안내 — 카지노 칩 버튼 */
+    .car { margin-top: 26px; border: 2px solid var(--gold); border-radius: 18px; padding: 22px 20px 26px; text-align: center; background: rgba(0, 0, 0, .18); }
+    .car h2 { margin: 0 0 8px; font-size: 18px; color: var(--gold-2); }
+    .car p { margin: 0 0 20px; font-size: 15px; color: #e9e2cf; word-break: keep-all; }
+    .chip { display: inline-grid; place-items: center; width: 172px; height: 172px; border-radius: 50%; text-decoration: none; color: #fff;
+            background: repeating-conic-gradient(var(--red) 0 22.5deg, var(--cream) 22.5deg 30deg);
+            box-shadow: 0 10px 24px rgba(0, 0, 0, .45), inset 0 0 0 6px rgba(0, 0, 0, .12); transition: transform .15s ease; }
+    .chip:hover { transform: translateY(-2px) rotate(-6deg); }
+    .chip:active { transform: scale(.97); }
+    .chip:focus-visible { outline: 3px solid var(--gold-2); outline-offset: 4px; }
+    .chip span { width: 128px; height: 128px; border-radius: 50%; background: var(--red); display: grid; place-content: center; text-align: center;
+                 border: 3px dashed rgba(255, 255, 255, .75); font-weight: 900; font-size: 17px; line-height: 1.35; }
+    .chip small { display: block; margin-top: 5px; font-size: 9.5px; font-weight: 700; opacity: .85; letter-spacing: .06em; }
+    .sub-link { display: block; margin-top: 16px; font-size: 14px; color: var(--gold-2); }
+
+    .foot { text-align: center; font-size: 12px; color: #b9c9bd; margin-top: 26px; word-break: keep-all; }
+    @media (prefers-reduced-motion: reduce) { .chip { transition: none; } .chip:hover { transform: none; } }
+  </style>
 </head>
 <body>
-<div class="page">
-  <header class="top">
-    <a class="brand" href="./" title="처음 화면으로">
-      <span class="brand-mark" aria-hidden="true">P</span>
-      <span>세민전 방문 차량 예약</span>
-    </a>
-    <nav class="tabs" aria-label="메뉴">
-      <button type="button" id="tabApply" aria-pressed="true">예약 신청</button>
-      <button type="button" id="tabMine" aria-pressed="false">내 예약 확인</button>
-    </nav>
-  </header>
+<div class="wrap">
+  <div class="rail" aria-hidden="true"><span class="red">♥</span> ♠ &nbsp;BET ON THE WORLD&nbsp; <span class="red">♦</span> ♣</div>
 
-  <div class="notice" id="setupNotice" hidden></div>
+  <div class="poster">
+    <img src="poster.jpg?v=1" width="1200" height="1697"
+         alt="제36회 세계민속문화축전 포스터 — BET ON THE WORLD: 세계의 가치가 맞붙는 단 하나의 무대로. 2026년 11월 14일 16시, 한국외대 글로벌캠퍼스 학생회관 앞 특설무대. 주최 한국외국어대학교, 주관 제36대 세계민속문화축전 준비위원회">
+  </div>
 
-  <!-- 예약 신청 -->
-  <main id="applyView">
-    <section class="step closed" id="closedNote" hidden>
-      <h2 id="closedTitle">지금은 세민전 예약을 받지 않아요</h2>
-      <p class="muted" id="closedText">예약이 열리면 이 페이지에서 신청할 수 있어요. 이미 한 예약은 [내 예약 확인]에서 볼 수 있어요.</p>
-    </section>
-    <form id="applyForm" novalidate>
-      <section class="step" aria-labelledby="s1">
-        <h2 id="s1"><span class="num">1</span>방문 날짜</h2>
-        <div class="dates" id="dateStrip" role="radiogroup" aria-label="방문 날짜"></div>
-        <p class="date-note" id="dateNote" role="status"></p>
-      </section>
+  <section class="card" aria-labelledby="invite">
+    <span class="pip tl red" aria-hidden="true">A<br>♥</span>
+    <span class="pip br" aria-hidden="true">A<br>♠</span>
+    <h1 id="invite"><span class="s red">♥</span><span class="s">♠</span> 제36회 세계민속문화축전으로<br>여러분을 초대합니다! <span class="s red">♦</span><span class="s">♣</span></h1>
+    <p>안녕하세요, 제36대 세계민속문화축전 준비위원회입니다. 서로 다른 문화가 만나 새로운 장면을 만들어 내는 곳, 한국외국어대학교 글로벌캠퍼스에서 제36회 세계민속문화축전이 펼쳐집니다!</p>
+    <p>올해 세민전에서는 세계 각국의 다채로운 문화와 열정이 하나의 무대 위에서 어우러집니다. 각 학회가 선보이는 개성 넘치는 공연과 그 안에 담긴 이야기를 함께 따라가보는 건 어떨까요?</p>
+    <p>공연의 즐거움을 더해줄 다양한 푸드트럭도 준비되어 있으니, 가족, 친구, 연인과 함께 세민전에서 특별한 추억을 만들어 보세요!</p>
+    <ul class="facts">
+      <li><span class="sym red" aria-hidden="true">♥</span><span class="k">일시</span><span class="v">2026년 11월 14일(토) 오후 4시</span></li>
+      <li><span class="sym" aria-hidden="true">♠</span><span class="k">장소</span><span class="v">한국외국어대학교 글로벌캠퍼스 학생회관 앞 특설무대</span></li>
+      <li><span class="sym red" aria-hidden="true">♦</span><span class="k">입장료</span><span class="v">무료 (사전 예매 없이 자유 관람)</span></li>
+    </ul>
+  </section>
 
-      <section class="step" aria-labelledby="s2">
-        <h2 id="s2"><span class="num">2</span>시간대</h2>
-        <div class="slots" id="slotList" role="radiogroup" aria-label="시간대">
-          <p class="muted">예약 현황을 불러오는 중…</p>
-        </div>
-      </section>
+  <section class="car" aria-labelledby="carTitle">
+    <h2 id="carTitle"><span aria-hidden="true">♣</span> 방문 차량 예약 안내 <span aria-hidden="true">♣</span></h2>
+    <p>세민전 당일 차량 예약제를 시행하고 있습니다. 세민전 축제를 관람하고 싶은분들은 아래 링크를 통해 사전 예약해 주세요! (입차는 당일 12시 30분부터 가능하며, 주차료가 발생할 수 있습니다)</p>
+    <a class="chip" href="apply.html"><span>방문 차량<br>예약하기<small>PLACE YOUR BET</small></span></a>
+    <a class="sub-link" href="apply.html#mine">이미 예약했어요 · 내 예약 확인</a>
+  </section>
 
-      <section class="step" aria-labelledby="s3">
-        <h2 id="s3"><span class="num">3</span>차량과 신청자</h2>
-        <label class="field">차량번호
-          <div class="plate">
-            <span class="strip" aria-hidden="true">KOR</span>
-            <input id="fPlate" autocomplete="off" spellcheck="false" placeholder="12가 3456" required>
-          </div>
-          <span class="hint" id="plateHint">예: 12가3456, 123가4567, 서울12가3456</span>
-        </label>
-        <div class="two">
-          <label class="field">이름
-            <input id="fName" autocomplete="name" maxlength="30" placeholder="홍길동" required>
-          </label>
-          <label class="field">연락처
-            <input id="fPhone" type="tel" inputmode="numeric" autocomplete="tel" placeholder="010-1234-5678" maxlength="13" required>
-          </label>
-        </div>
-      </section>
-
-      <section class="step" aria-labelledby="s4">
-        <h2 id="s4"><span class="num">4</span>개인정보 수집·이용 동의</h2>
-        <label class="agree">
-          <input type="checkbox" id="fAgree">
-          <span>아래 내용에 동의합니다 (필수)</span>
-        </label>
-        <details class="terms">
-          <summary>내용 보기</summary>
-          <table>
-            <tr><th>수집 항목</th><td>이름, 연락처, 차량번호, 방문 날짜·시간대</td></tr>
-            <tr><th>이용 목적</th><td>세민전 방문 차량 출입 확인, 예약 관련 연락</td></tr>
-            <tr><th>보관 기간</th><td>이름·연락처는 방문일로부터 30일 후 삭제</td></tr>
-          </table>
-          <p>동의하지 않으실 수 있으며, 이 경우 예약 신청을 할 수 없습니다.</p>
-        </details>
-      </section>
-
-      <div class="submit-bar">
-        <p class="summary" id="summary">시간대를 골라 주세요.</p>
-        <p class="form-error" id="formError" role="alert"></p>
-        <button type="submit" class="primary" id="submitBtn">예약 신청</button>
-      </div>
-    </form>
-  </main>
-
-  <!-- 신청 완료 -->
-  <main id="doneView" hidden>
-    <section class="ticket" aria-labelledby="doneTitle">
-      <div class="ticket-head">
-        <span class="check" aria-hidden="true">✓</span>
-        <h2 id="doneTitle">예약이 확정됐어요</h2>
-      </div>
-      <dl class="ticket-body">
-        <div><dt>예약번호</dt><dd class="mono" id="dCode"></dd></div>
-        <div><dt>행사</dt><dd id="dEvent"></dd></div>
-        <div><dt>방문 날짜</dt><dd id="dDate"></dd></div>
-        <div><dt>시간대</dt><dd id="dSlot"></dd></div>
-        <div><dt>차량번호</dt><dd><span class="mini-plate" id="dPlate"></span></dd></div>
-      </dl>
-      <p class="ticket-foot">예약한 시간대에 오시면 번호판 확인 후 바로 들어오실 수 있어요. 번호판 인식이 어려울 때는 <b>실시간 예약확인증</b>을 보여 주세요.</p>
-    </section>
-    <button type="button" class="primary pass-go" id="passBtn">실시간 예약확인증 열기</button>
-    <div class="row-buttons">
-      <button type="button" class="primary" id="againBtn">다른 예약 신청</button>
-      <button type="button" id="toMineBtn">내 예약 확인·취소</button>
-    </div>
-  </main>
-
-  <!-- 내 예약 확인·취소 -->
-  <main id="mineView" hidden>
-    <section class="step" aria-labelledby="m1">
-      <h2 id="m1">내 예약 확인·취소</h2>
-      <p class="muted">신청할 때 입력한 차량번호와 연락처를 넣어 주세요.</p>
-      <form id="mineForm" class="two" novalidate>
-        <label class="field">차량번호<input id="mPlate" autocomplete="off" placeholder="12가 3456"></label>
-        <label class="field">연락처<input id="mPhone" type="tel" inputmode="numeric" placeholder="010-1234-5678" maxlength="13"></label>
-        <button type="submit" class="primary wide" id="mineBtn">조회</button>
-      </form>
-      <p class="form-error" id="mineError" role="alert"></p>
-      <div id="mineList"></div>
-    </section>
-  </main>
-
-  <footer class="foot">
-    <span id="footSlots"></span>
-    <span>정기 등록 차량은 예약 없이 출입할 수 있어요.</span>
-  </footer>
+  <p class="foot">주최 한국외국어대학교 · 주관 제36대 세계민속문화축전 준비위원회</p>
 </div>
-
-<script src="supabase.js"></script>
 <script src="config.js"></script>
-<script src="stats.js?v=1"></script>
-<script src="semin.js?v=3"></script>
+<script src="stats.js?v=2"></script>
 </body>
 </html>

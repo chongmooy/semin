@@ -29,6 +29,7 @@
       } catch (e) {}
     };
     send(false);
-    setInterval(function () { if (document.visibilityState === "visible") send(true); }, 120000);
+    // "보는 중" 2분 신호는 끔 (접속이 몰릴 때 서버 부담을 줄이려고 · 2026-11-02) — 페이지를 열 때 1번만 기록
+    // setInterval(function () { if (document.visibilityState === "visible") send(true); }, 120000);
   } catch (e) {}
 })();
