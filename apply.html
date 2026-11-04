@@ -11,6 +11,16 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
   <link rel="stylesheet" href="semin.css?v=4">
+  <script>
+    // 대문 페이지의 [방문 차량 예약하기] 버튼을 거쳐 들어온 경우에만 신청 화면을 엶 (주소를 직접 열면 대문으로)
+    //  · "내 예약 확인"(apply.html#mine)은 언제든 바로 열림 · 같은 탭에서 3시간 동안 유지
+    (function () {
+      try {
+        if (/^#mine/.test(location.hash)) return;
+        if (Date.now() - (+sessionStorage.getItem("semin-gate") || 0) > 3 * 3600 * 1000) location.replace("./");
+      } catch (e) {}
+    })();
+  </script>
 </head>
 <body>
 <div class="page">
@@ -133,6 +143,6 @@
 <script src="supabase.js"></script>
 <script src="config.js"></script>
 <script src="stats.js?v=2"></script>
-<script src="semin.js?v=4"></script>
+<script src="semin.js?v=5"></script>
 </body>
 </html>

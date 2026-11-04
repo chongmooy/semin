@@ -68,7 +68,9 @@
     try { history.replaceState(null, "", location.pathname + location.search + (view === "mine" ? "#mine" : "")); } catch (e) {}
     window.scrollTo(0, 0);
   }
-  $("tabApply").addEventListener("click", function () { show("apply"); load(); });
+  // 대문 페이지의 예약 버튼을 거쳐 들어온 경우에만 신청 화면 (주소를 직접 열면 대문으로) — apply.html 머리말의 안내 참고
+  var passedGate = function () { try { return Date.now() - (+sessionStorage.getItem("semin-gate") || 0) < 3 * 3600 * 1000; } catch (e) { return true; } };
+  $("tabApply").addEventListener("click", function () { if (!passedGate()) { location.href = "./"; return; } show("apply"); load(); });
   $("tabMine").addEventListener("click", function () { show("mine"); });
   $("againBtn").addEventListener("click", function () { show("apply"); load(); });
   var lastDone = {};
@@ -85,6 +87,14 @@
 
   // ---------- 행사 정보 · 시간대 (DB) ----------
   var ev = null, loaded = false, selSlot = "", reqNo = 0, openTimer = null;
+  // 접속자가 몰려 서버가 바쁠 때: "새로고침" 대신 간격을 늘려 자동으로 다시 시도 (5초 → 10초 → … 최대 1분, 사람마다 조금씩 다르게)
+  var retryT = null, retryN = 0;
+  function retryLater() {
+    clearTimeout(retryT); retryN++;
+    var wait = Math.min(60, 5 * Math.pow(2, retryN - 1)) * (0.7 + Math.random() * 0.6);
+    retryT = setTimeout(load, wait * 1000);
+    return Math.round(wait);
+  }
   function load() {
     if (!sb) { render(); return Promise.resolve(); }
     var my = ++reqNo;
@@ -93,16 +103,19 @@
       if (my !== reqNo) return;
       if (res.error) throw res.error;
       ev = res.data && res.data.ok ? res.data : null;
-      loaded = true;
+      loaded = true; retryN = 0;
       clearTimeout(openTimer);                                     // 공개 시각이 되면 자동으로 다시 불러옴
       if (ev && ev.opens_at) {
         var at = new Date(String(ev.opens_at).replace(/(\.\d{3})\d+/, "$1"));
-        if (!isNaN(at)) openTimer = setTimeout(load, Math.min(2147483000, Math.max(1000, at - new Date() + 1500)));
+        // 공개 시각에 모든 화면이 한꺼번에 묻지 않게 0~20초 사이로 흩어서 다시 불러옴
+        if (!isNaN(at)) openTimer = setTimeout(load, Math.min(2147483000, Math.max(1000, at - new Date() + 1500 + Math.random() * 20000)));
       }
       render();
     }).catch(function (e) {
       console.error(e);
-      $("slotList").innerHTML = '<p class="muted">예약 현황을 불러오지 못했어요. 인터넷 연결을 확인하고 새로고침해 주세요.</p>';
+      if (my !== reqNo) return;
+      var w = retryLater();
+      if (!ev) $("slotList").innerHTML = '<p class="muted">접속자가 많아 예약 현황을 불러오지 못했어요. ' + w + '초 뒤 자동으로 다시 불러올게요. 새로고침하지 않고 기다려 주세요.</p>';
     }).then(function () { $("slotList").removeAttribute("aria-busy"); });
   }
   // 공개 시각 "11/3(화) 14시" (한국 시간 기준)
@@ -235,7 +248,7 @@
         $("fPlate").value = ""; selSlot = ""; $("fAgree").checked = false; load();
         show("done");
       })
-      .catch(function (err) { console.error(err); setError("신청하지 못했어요. 인터넷 연결을 확인하고 다시 시도해 주세요."); })
+      .catch(function (err) { console.error(err); setError("접속자가 많아 신청이 전달되지 않았어요. 잠시 후 다시 눌러 주세요. (같은 차량이 두 번 예약되지는 않아요)"); })
       .then(function () { delete btn.dataset.busy; btn.disabled = false; btn.textContent = "예약 신청"; updateSummary(); });
   });
 
@@ -288,7 +301,8 @@
   // ---------- 시작 ----------
   updateSummary();
   load();
-  if (/^#mine/.test(location.hash)) show("mine");                        // 확인증 화면 등에서 #mine 으로 들어오면 바로 조회 화면
-  // 남은 자리·공개 여부 30초마다 새로 (지난 시간대 표시도 함께)
-  setInterval(function () { if (!$("applyView").hidden && !document.hidden) load(); }, 30000);
+  if (/^#mine/.test(location.hash)) show("mine");
+  else if (!passedGate()) location.replace("./");                        // 확인증 화면 등에서 #mine 으로 들어오면 바로 조회 화면
+  // 현황은 2분마다 (시간대가 하나라 자주 볼 필요 없음 · 사람마다 0~20초 어긋나게)
+  setInterval(function () { if (!$("applyView").hidden && !document.hidden) setTimeout(load, Math.random() * 20000); }, 120000);
 })();
